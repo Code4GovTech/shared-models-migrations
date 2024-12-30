@@ -1,7 +1,6 @@
 from sqlalchemy.future import select
 from .models import *
 from sqlalchemy import update
-# from app import async_session
 from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime
 from sqlalchemy.orm import aliased
@@ -11,14 +10,6 @@ from sqlalchemy.exc import NoResultFound
 
 
 class DmpCronQueries:
-    
-    # def get_postgres_uri():
-    #     DB_HOST = os.getenv('POSTGRES_DB_HOST')
-    #     DB_NAME = os.getenv('POSTGRES_DB_NAME')
-    #     DB_USER = os.getenv('POSTGRES_DB_USER')
-    #     DB_PASS = os.getenv('POSTGRES_DB_PASS')
-        
-    #     return f'postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}'
     
     async def get_timestamp(async_session, model, col_name: str, col: str, value):
         try:

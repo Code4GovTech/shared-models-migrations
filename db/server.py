@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
-from db import PostgresORM
+from ..db import PostgresORM
 from .models import Base, ContributorsRegistration,GithubClassroomData, IssueContributors
 from sqlalchemy import delete, insert
 from sqlalchemy import select, asc, desc,update, join

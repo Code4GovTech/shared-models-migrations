@@ -1,33 +1,33 @@
 import os
 
-from dotenv import load_dotenv            
-from sqlalchemy import create_engine,select,desc,update,delete
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, select, desc, update, delete
 from sqlalchemy.orm import sessionmaker
 from .models import *
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
+
 # load_dotenv()
 
 class DiscordBotQueries:
 
-    def convert_dict(self,data):
+    def convert_dict(self, data):
         try:
             if type(data) == list:
                 data = [val.to_dict() for val in data]
             else:
                 return [data.to_dict()]
-            
+
             return data
         except Exception as e:
             print(e)
             raise Exception
-        
+
     def getStatsStorage(self, fileName):
         return self.client.storage.from_("c4gt-github-profile").download(fileName)
 
-    
-    def logVCAction(self,user, action):
+    def logVCAction(self, user, action):
         try:
             new_log = VcLogs(discord_id=user.id, discord_name=user.name, option=action)
             self.session.add(new_log)
@@ -37,17 +37,16 @@ class DiscordBotQueries:
             self.session.rollback()
             print("Error logging VC action:", e)
             return None
-    
-    def getLeaderboard(self, id: int):        
+
+    def getLeaderboard(self, id: int):
         data = self.session.query(Leaderboard).where(Leaderboard.discord_id == id).all()
         return self.convert_dict(data)
 
-    
     def read(self, table_class, query_key, query_value, columns=None):
         try:
-            stmt = select(table_class)           
+            stmt = select(table_class)
             stmt = stmt.where(getattr(table_class, query_key) == query_value)
-            
+
             if columns:
                 stmt = stmt.with_only_columns(*(getattr(table_class, col) for col in columns))
                 result = self.session.execute(stmt)
@@ -55,15 +54,15 @@ class DiscordBotQueries:
                 column_names = [col.name for col in stmt.columns]
                 data = [dict(zip(column_names, row)) for row in rows]
                 return data
-                                
+
             result = self.session.execute(stmt)
             return self.convert_dict(result.scalars().all())
 
         except Exception as e:
             print(f"Error reading data from table '{table_class}':", e)
             return None
-        
-    def get_class_by_tablename(self,tablename):
+
+    def get_class_by_tablename(self, tablename):
         try:
             for cls in Base.registry._class_registry.values():
                 if isinstance(cls, DeclarativeMeta):
@@ -72,9 +71,10 @@ class DiscordBotQueries:
             return None
         except Exception as e:
             print(f"ERROR get_class_by_tablename - {e}")
-            return None    
+            return None
 
-    def read_by_order_limit(self, table_class, query_key, query_value, order_column, order_by=False, limit=1, columns="*"):
+    def read_by_order_limit(self, table_class, query_key, query_value, order_column, order_by=False, limit=1,
+                            columns="*"):
         try:
             stmt = select(table_class)
             stmt = stmt.where(getattr(table_class, query_key) == query_value)
@@ -82,32 +82,32 @@ class DiscordBotQueries:
                 stmt = stmt.order_by(desc(getattr(table_class, order_column)))
             else:
                 stmt = stmt.order_by(getattr(table_class, order_column))
-            
-            stmt = stmt.limit(limit)            
+
+            stmt = stmt.limit(limit)
             if columns != "*":
                 stmt = stmt.with_only_columns(*(getattr(table_class, col) for col in columns))
-            
+
             result = self.session.execute(stmt)
             results = result.fetchall()
-            
+
             # Convert results to list of dictionaries
             column_names = [col['name'] for col in result.keys()]
             data = [dict(zip(column_names, row)) for row in results]
-            
+
             return data
-        
+
         except Exception as e:
             print("Error reading data:", e)
             return None
 
-    async def read_all(self,table_class):
+    async def read_all(self, table_class):
         try:
             table = self.get_class_by_tablename(table_class)
-            # Query all records from the specified table class            
+            # Query all records from the specified table class
             async with self.session() as session:
                 stmt = select(table)
-                result = await session.execute(stmt)                
-                
+                result = await session.execute(stmt)
+
                 data = result.scalars().all()
                 result = self.convert_dict(data)
             return result
@@ -119,40 +119,40 @@ class DiscordBotQueries:
         try:
             stmt = (
                 update(table_class)
-                .where(getattr(table_class, query_key) == query_value)
-                .values(update_data)
-                .returning(*[getattr(table_class, col) for col in update_data.keys()])  # Return updated columns
+                    .where(getattr(table_class, query_key) == query_value)
+                    .values(update_data)
+                    .returning(*[getattr(table_class, col) for col in update_data.keys()])  # Return updated columns
             )
-            
+
             result = self.session.execute(stmt)
             self.session.commit()
-            updated_record = result.fetchone() 
-            
+            updated_record = result.fetchone()
+
             if updated_record:
                 updated_record_dict = dict(zip(result.keys(), updated_record))
                 return updated_record_dict
             else:
                 return None
         except Exception as e:
-            import pdb;pdb.set_trace()
+            import pdb;
+            pdb.set_trace()
             print("Error updating record:", e)
             return None
-
 
     def insert(self, table, data):
         try:
             new_record = table(**data)
             self.session.add(new_record)
             self.session.commit()
-            return new_record.to_dict() 
+            return new_record.to_dict()
         except Exception as e:
             print("Error inserting data:", e)
             self.session.rollback()  # Rollback in case of error
             return None
 
-    
     def memberIsAuthenticated(self, member):
-        data = self.session.query(ContributorsRegistration).where(ContributorsRegistration.discord_id == member.id).all()
+        data = self.session.query(ContributorsRegistration).where(
+            ContributorsRegistration.discord_id == member.id).all()
         if data:
             return True
         else:
@@ -175,8 +175,7 @@ class DiscordBotQueries:
             print("Error adding or updating chapter:", e)
             return None
 
-    
-    def deleteChapter(self,roleId: int):
+    def deleteChapter(self, roleId: int):
         try:
             # Build the delete statement
             stmt = delete(Chapters).where(Chapters.discord_role_id == roleId)
@@ -187,7 +186,7 @@ class DiscordBotQueries:
             print("Error deleting chapter:", e)
             return None
 
-    def lookForRoles(self, roles):
+    def _lookForRoles(self, roles):
         predefined_roles = {
             "country": ["India", "Asia (Outside India)", "Europe", "Africa", "North America", "South America",
                         "Australia"],
@@ -213,7 +212,7 @@ class DiscordBotQueries:
             if role.name.startswith("College:"):
                 chapter_roles.append(role.name[len("College: "):])
             elif role.name.startswith("Corporate:"):
-                chapter_roles.append(role).name[len("Corporate: "):]
+                chapter_roles.append(role.name[len("Corporate: "):])
 
         # gender
         for role in roles:
@@ -247,14 +246,14 @@ class DiscordBotQueries:
             "experience": experience
         }
         return user_roles
-        
+
     async def updateContributor(self, contributor, table_class=None):
         try:
             async with self.session() as session:
                 if table_class == None:
                     table_class = ContributorsDiscord
-                chapters = lookForRoles(contributor.roles)["chapter_roles"]
-                gender = lookForRoles(contributor.roles)["gender"]
+                chapters = self._lookForRoles(contributor.roles)["chapter_roles"]
+                gender = self._lookForRoles(contributor.roles)["gender"]
 
                 # Prepare the data to be upserted
                 update_data = {
@@ -274,8 +273,8 @@ class DiscordBotQueries:
                 if existing_record:
                     stmt = (
                         update(table_class)
-                        .where(table_class.discord_id == contributor.id)
-                        .values(update_data)
+                            .where(table_class.discord_id == contributor.id)
+                            .values(update_data)
                     )
                     self.session.execute(stmt)
                 else:
@@ -289,12 +288,11 @@ class DiscordBotQueries:
             print("Error updating contributor:", e)
             return False
 
-
     def updateContributors(self, contributors, table_class):
         try:
             for contributor in contributors:
-                chapters = lookForRoles(contributor.roles)["chapter_roles"]
-                gender = lookForRoles(contributor.roles)["gender"]
+                chapters = self._lookForRoles(contributor.roles)["chapter_roles"]
+                gender = self._lookForRoles(contributor.roles)["gender"]
                 update_data = {
                     "discord_id": contributor.id,
                     "discord_username": contributor.name,
@@ -307,8 +305,8 @@ class DiscordBotQueries:
                 if existing_record:
                     stmt = (
                         update(table_class)
-                        .where(table_class.discord_id == contributor.id)
-                        .values(update_data)
+                            .where(table_class.discord_id == contributor.id)
+                            .values(update_data)
                     )
                     self.session.execute(stmt)
                 else:
@@ -321,7 +319,6 @@ class DiscordBotQueries:
             print("Error updating contributors:", e)
             return False
 
-    
     def deleteContributorDiscord(self, contributorDiscordIds, table_class=None):
         try:
             if table_class == None:
@@ -329,21 +326,19 @@ class DiscordBotQueries:
             stmt = delete(table_class).where(table_class.discord_id.in_(contributorDiscordIds))
             self.session.execute(stmt)
             self.session.commit()
-            
+
             return True
         except Exception as e:
             print("Error deleting contributors:", e)
             self.session.rollback()
             return False
-        
-    
 
-    def read_all_active(self, table):      
+    def read_all_active(self, table):
         if table == "contributors_discord":
-            table = ContributorsDiscord 
+            table = ContributorsDiscord
         data = self.session.query(table).where(table.is_active == True).all()
         return self.convert_dict(data)
-    
+
     def invalidateContributorDiscord(self, contributorDiscordIds):
         table = "contributors_discord"
         for id in contributorDiscordIds:

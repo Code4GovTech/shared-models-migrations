@@ -269,8 +269,8 @@ class DiscordBotQueries:
             async with self.session() as session:
                 if table_class == None:
                     table_class = ContributorsDiscord
-                chapters = self._lookForRoles(contributor.roles)["chapter_roles"]
-                gender = self._lookForRoles(contributor.roles)["gender"]
+                chapters = self._lookForRoles(contributor["roles"])["chapter_roles"]
+                gender = self._lookForRoles(contributor["roles"])["gender"]
 
                 # Prepare the data to be upserted
                 update_data = {

@@ -227,6 +227,9 @@ class ContributorsDiscord(Base):
     field_name = Column(Text, nullable=True, name='name')  # Adjusted field name
     chapter = Column(Text, nullable=True, comment="the chapter they're associated with")
     gender = Column(Text, nullable=True)
+    country = Column(Text, nullable=True)
+    city = Column(Text, nullable=True)
+    experience = Column(Text, nullable=True)
     is_active = Column(Boolean, nullable=False)
 
     def __repr__(self):
@@ -244,6 +247,9 @@ class ContributorsDiscord(Base):
             'name': self.field_name,
             'chapter': self.chapter,
             'gender': self.gender,
+            'country': self.country,
+            'city': self.city,
+            'experience': self.experience,
             'is_active': self.is_active
         }
         
@@ -1091,6 +1097,8 @@ class PrHistory(Base):
     pr_id = Column(BigInteger, nullable=False)
     ticket_url = Column(Text, nullable=False)
     ticket_complexity = Column(Text, nullable=True)
+    title = Column(Text, nullable=True)
+    issue_id = Column(BigInteger, nullable=True)
 
     def __repr__(self):
         return f"<PrHistory(id={self.id}, pr_id={self.pr_id})>"
@@ -1111,7 +1119,9 @@ class PrHistory(Base):
             'merged_by_username': self.merged_by_username,
             'pr_id': self.pr_id,
             'ticket_url': self.ticket_url,
-            'ticket_complexity': self.ticket_complexity
+            'ticket_complexity': self.ticket_complexity,
+            'title': self.title,
+            'issue_id': self.issue_id
         }
 
 class PrStaging(Base):

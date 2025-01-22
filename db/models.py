@@ -648,14 +648,14 @@ class IssueMentors(Base):
     __tablename__ = 'issue_mentors'
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    issue_id = Column(BigInteger, ForeignKey('issues.id'))
+    issue_id = Column(BigInteger, ForeignKey('issues.id'), primary_key=True)
     org_mentor_id = Column(Text, nullable=True)
     angel_mentor_id = Column(BigInteger, ForeignKey('contributors_registration.id'))
     created_at = Column(DateTime, nullable=True)
     updated_at = Column(DateTime, nullable=True)
 
     def __repr__(self):
-        return f"<IssueMentors(issue_id={self.issue_id}, mentor_id={self.mentor_id})>"
+        return f"<IssueMentors(issue_id={self.issue_id}, mentor_id={self.angel_mentor_id})>"
 
     def to_dict(self):
         return {

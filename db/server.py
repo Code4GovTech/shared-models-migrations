@@ -520,7 +520,7 @@ class ServerQueries:
 
                 updated_record = result.scalars().first()
                 # Convert the updated record to a dictionary before returning
-                return self.convert_dict(updated_record) if updated_record else None
+                return result
                     
         except Exception as e:
             print(f"Error in update_data: {e}")

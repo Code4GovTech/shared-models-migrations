@@ -729,7 +729,6 @@ class MentorDetails(Base):
     updated_at = Column(DateTime, nullable=True)
     
     point_transactions = relationship('PointTransactions', back_populates='mentor')
-    user_activities = relationship('UserActivity', back_populates='mentor')
     user_points_mappings = relationship('UserPointsMapping', back_populates='mentor')
 
 
@@ -1328,11 +1327,10 @@ class UserActivity(Base):
     activity = Column(Text, nullable=True)
     created_at = Column(DateTime, nullable=True)
     updated_at = Column(DateTime, nullable=True)
-    mentor_id = Column(BigInteger, ForeignKey('mentor_details.id'), nullable=True)  # Assumes 'MentorDetails' model
+    mentor_id = Column(BigInteger, nullable=True)  # Assumes 'MentorDetails' model
 
     contributor = relationship('ContributorsRegistration', back_populates='user_activities')
     issue = relationship('Issues', back_populates='user_activities')
-    mentor = relationship('MentorDetails', back_populates='user_activities')
 
     def __repr__(self):
         return f"<UserActivity(contributor_id={self.contributor_id}, issue_id={self.issue_id})>"

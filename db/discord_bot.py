@@ -269,37 +269,41 @@ class DiscordBotQueries:
             async with self.session() as session:
                 if table_class == None:
                     table_class = ContributorsDiscord
-                chapters = self._lookForRoles(contributor.roles)["chapter_roles"]
-                gender = self._lookForRoles(contributor.roles)["gender"]
+                chapters = self._lookForRoles(contributor["roles"])["chapter_roles"]
+                gender = self._lookForRoles(contributor["roles"])["gender"]
 
-                # Prepare the data to be upserted
                 update_data = {
-                    "discord_id": contributor.id,
-                    "discord_username": contributor.name,
+                    "discord_id": contributor["discord_id"],
+                    "discord_username": contributor["discord_username"],
+                    "field_name": contributor["name"],
                     "chapter": chapters[0] if chapters else None,
                     "gender": gender,
-                    "joined_at": contributor.joined_at,
+                    "email": contributor["email"] if contributor["email"] else "",
+                    "is_active": contributor["is_active"],
+                    "joined_at": contributor["joined_at"].replace(tzinfo=None),  # Ensure naive datetime
                 }
 
-                stmt = select(ContributorsDiscord).where(ContributorsDiscord.discord_id == contributor.id)
+                # Check if the record exists
+                stmt = select(table_class).where(table_class.discord_id == contributor["discord_id"])
                 result = await session.execute(stmt)
                 existing_record = result.scalars().first()
 
-                # existing_record = self.session.query(table_class).filter_by(discord_id=contributor.id).first()
+                print('existing record ', existing_record)
 
                 if existing_record:
+                    # Update existing record
                     stmt = (
                         update(table_class)
-                            .where(table_class.discord_id == contributor.id)
-                            .values(update_data)
+                        .where(table_class.discord_id == contributor["discord_id"])
+                        .values(**update_data)  # Pass the data as keyword arguments
                     )
-                    self.session.execute(stmt)
+                    await session.execute(stmt)
+                    await session.commit()  # Commit changes after executing the update
                 else:
+                    # Insert new record
                     new_record = table_class(**update_data)
-                    self.session.add(new_record)
-
-                # Commit the transaction
-                self.session.commit()
+                    session.add(new_record)  # Add to session
+                    await session.commit()  # Commit changes after adding
                 return True
         except Exception as e:
             print("Error updating contributor:", e)

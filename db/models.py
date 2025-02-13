@@ -227,6 +227,9 @@ class ContributorsDiscord(Base):
     field_name = Column(Text, nullable=True, name='name')  # Adjusted field name
     chapter = Column(Text, nullable=True, comment="the chapter they're associated with")
     gender = Column(Text, nullable=True)
+    country = Column(Text, nullable=True)
+    city = Column(Text, nullable=True)
+    experience = Column(Text, nullable=True)
     is_active = Column(Boolean, nullable=False)
 
     def __repr__(self):
@@ -244,6 +247,9 @@ class ContributorsDiscord(Base):
             'name': self.field_name,
             'chapter': self.chapter,
             'gender': self.gender,
+            'country': self.country,
+            'city': self.city,
+            'experience': self.experience,
             'is_active': self.is_active
         }
         
@@ -642,14 +648,14 @@ class IssueMentors(Base):
     __tablename__ = 'issue_mentors'
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    issue_id = Column(BigInteger, ForeignKey('issues.id'))
+    issue_id = Column(BigInteger, ForeignKey('issues.id'), primary_key=True)
     org_mentor_id = Column(Text, nullable=True)
     angel_mentor_id = Column(BigInteger, ForeignKey('contributors_registration.id'))
     created_at = Column(DateTime, nullable=True)
     updated_at = Column(DateTime, nullable=True)
 
     def __repr__(self):
-        return f"<IssueMentors(issue_id={self.issue_id}, mentor_id={self.mentor_id})>"
+        return f"<IssueMentors(issue_id={self.issue_id}, mentor_id={self.angel_mentor_id})>"
 
     def to_dict(self):
         return {
@@ -723,7 +729,6 @@ class MentorDetails(Base):
     updated_at = Column(DateTime, nullable=True)
     
     point_transactions = relationship('PointTransactions', back_populates='mentor')
-    user_activities = relationship('UserActivity', back_populates='mentor')
     user_points_mappings = relationship('UserPointsMapping', back_populates='mentor')
 
 
@@ -1091,6 +1096,8 @@ class PrHistory(Base):
     pr_id = Column(BigInteger, nullable=False)
     ticket_url = Column(Text, nullable=False)
     ticket_complexity = Column(Text, nullable=True)
+    title = Column(Text, nullable=True)
+    issue_id = Column(BigInteger, nullable=True)
 
     def __repr__(self):
         return f"<PrHistory(id={self.id}, pr_id={self.pr_id})>"
@@ -1111,7 +1118,9 @@ class PrHistory(Base):
             'merged_by_username': self.merged_by_username,
             'pr_id': self.pr_id,
             'ticket_url': self.ticket_url,
-            'ticket_complexity': self.ticket_complexity
+            'ticket_complexity': self.ticket_complexity,
+            'title': self.title,
+            'issue_id': self.issue_id
         }
 
 class PrStaging(Base):
@@ -1318,11 +1327,10 @@ class UserActivity(Base):
     activity = Column(Text, nullable=True)
     created_at = Column(DateTime, nullable=True)
     updated_at = Column(DateTime, nullable=True)
-    mentor_id = Column(BigInteger, ForeignKey('mentor_details.id'), nullable=True)  # Assumes 'MentorDetails' model
+    mentor_id = Column(BigInteger, nullable=True)  # Assumes 'MentorDetails' model
 
     contributor = relationship('ContributorsRegistration', back_populates='user_activities')
     issue = relationship('Issues', back_populates='user_activities')
-    mentor = relationship('MentorDetails', back_populates='user_activities')
 
     def __repr__(self):
         return f"<UserActivity(contributor_id={self.contributor_id}, issue_id={self.issue_id})>"

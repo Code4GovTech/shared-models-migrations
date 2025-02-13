@@ -594,6 +594,7 @@ class ServerQueries:
                     pr_history_record.merged_by_username = data['merged_by_username']
                     pr_history_record.ticket_url = data['ticket_url']
                     pr_history_record.ticket_complexity = data['ticket_complexity']
+                    pr_history_record.issue_id = data["issue_id"]
 
                     # Commit the changes to the database
                     await session.commit()

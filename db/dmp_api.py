@@ -8,24 +8,31 @@ from sqlalchemy.future import select
 
 class DmpAPIQueries:
 
-    async def get_issue_query(async_session):
+    async def get_issue_query(async_session, year: int = None):
         try:
-            async with async_session() as session:
-                results = await session.execute(
-                    select(
-                        DmpOrgs.id.label('org_id'),
-                        DmpOrgs.name.label('org_name'),
-                        func.json_agg(
-                            func.json_build_object(
-                                'id', DmpIssues.id,
-                                'name', DmpIssues.title
-                            )
-                        ).label('issues')
+            query = select(
+                DmpOrgs.id.label('org_id'),
+                DmpOrgs.name.label('org_name'),
+                func.json_agg(
+                    func.json_build_object(
+                        'id', DmpIssues.id,
+                        'name', DmpIssues.title
                     )
-                    .outerjoin(DmpIssues, DmpOrgs.id == DmpIssues.org_id)
-                    .group_by(DmpOrgs.id)
-                    .order_by(DmpOrgs.id)
-                )
+                ).label('issues')
+            )
+            
+            # Add join
+            query = query.outerjoin(DmpIssues, DmpOrgs.id == DmpIssues.org_id)
+            
+            # Add year filter if provided
+            if year is not None:
+                query = query.where(DmpIssues.year == year)
+                
+            # Add group by and order by
+            query = query.group_by(DmpOrgs.id).order_by(DmpOrgs.id)
+            
+            async with async_session() as session:
+                results = await session.execute(query)
 
                 # Extract results as a list of dictionaries if needed
                 data = results.all()

@@ -385,6 +385,7 @@ class DmpIssues(Base):
     description = Column(Text, nullable=False)
     repo = Column(Text, nullable=False)
     repo_owner = Column(Text, nullable=False)
+    year = Column(Integer, nullable=True, comment='The year the issue was created')
 
     def __repr__(self):
         return f"<DmpIssues(id={self.id}, title={self.title})>"

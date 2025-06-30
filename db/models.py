@@ -401,7 +401,8 @@ class DmpIssues(Base):
             'org_id': self.org_id,
             'description': self.description,
             'repo': self.repo,
-            'repo_owner': self.repo_owner
+            'repo_owner': self.repo_owner,
+            'year': self.year
         }
 
 class DmpOrgs(Base):
